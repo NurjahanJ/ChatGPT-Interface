@@ -8,11 +8,9 @@ import logo from './images/logo.png';
 function App() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [conversations, setConversations] = useState([
-    { id: '1', title: 'New Chat' },
-  ]);
+  // We keep this state for future conversation management functionality
+  // eslint-disable-next-line no-unused-vars
   const [currentConversationId, setCurrentConversationId] = useState('1');
-  const [showEmptyState, setShowEmptyState] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
