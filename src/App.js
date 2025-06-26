@@ -48,6 +48,7 @@ function App() {
           ? [...messages, userMessage]
           : [{ role: 'system', content: 'You are a helpful assistant.' }, userMessage];
 
+      console.log(`Sending message with model: ${modelId}`);
       const response = await sendConversation(messagesToSend, modelId);
 
       const assistantContent =
@@ -58,9 +59,27 @@ function App() {
 
       setMessages([...messages, userMessage, assistantMessage]);
     } catch (err) {
-      console.error('Error sending message:', err);
-      const errorMessage = createAssistantMessage("Sorry, something went wrong.");
+      console.error('Error details in App.js:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name
+      });
+      
+      // Create a more informative error message for the user
+      let errorContent = "Sorry, something went wrong.";
+      
+      // Add more specific error messages based on common issues
+      if (err.message.includes('timeout')) {
+        errorContent = "The request timed out. Please try again later.";
+      } else if (err.message.includes('rate limit')) {
+        errorContent = "Rate limit exceeded. Please try again in a few moments.";
+      } else if (err.message.includes('API key')) {
+        errorContent = "API configuration issue. Please check your settings.";
+      }
+      
+      const errorMessage = createAssistantMessage(errorContent);
       errorMessage.timestamp = new Date().toISOString();
+      errorMessage.isError = true; // Flag to style error messages differently
       setMessages([...messages, userMessage, errorMessage]);
     } finally {
       setLoading(false);

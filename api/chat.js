@@ -3,6 +3,13 @@ const axios = require('axios');
 
 // This function will be executed when the endpoint is called
 module.exports = async (req, res) => {
+  // Log request information for debugging
+  console.log('API Request received:', { 
+    method: req.method,
+    url: req.url,
+    headers: req.headers,
+    body: req.body ? { modelId: req.body.modelId } : null // Log only non-sensitive parts
+  });
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -32,10 +39,16 @@ module.exports = async (req, res) => {
     const apiKey = process.env.OPENAI_API_KEY;
     
     if (!apiKey) {
+      console.error('OPENAI_API_KEY environment variable is not configured');
       return res.status(500).json({ error: 'API key not configured' });
     }
     
-    // Call OpenAI API
+    // Log that we have a valid API key (without revealing the key)
+    console.log('API key is configured and available');
+    
+    console.log(`Making request to OpenAI API with model: ${model}`);
+    
+    // Call OpenAI API with timeout and retry logic
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
@@ -48,16 +61,40 @@ module.exports = async (req, res) => {
         headers: {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json'
-        }
+        },
+        timeout: 30000 // 30 second timeout
       }
     );
     
+    console.log('OpenAI API response received successfully');
+    
     return res.json(response.data);
   } catch (error) {
-    console.error('Error calling OpenAI API:', error.response?.data || error.message);
+    // Detailed error logging
+    console.error('Error calling OpenAI API:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      code: error.code,
+      stack: error.stack
+    });
+    
+    // Check for specific error types
+    if (error.code === 'ECONNABORTED') {
+      return res.status(504).json({ error: 'Request to OpenAI timed out' });
+    }
+    
+    if (error.response?.status === 401) {
+      return res.status(401).json({ error: 'Invalid API key or authentication error' });
+    }
+    
+    if (error.response?.status === 429) {
+      return res.status(429).json({ error: 'Rate limit exceeded with OpenAI API' });
+    }
     
     return res.status(error.response?.status || 500).json({ 
-      error: error.response?.data?.error?.message || 'Failed to get a response from OpenAI' 
+      error: error.response?.data?.error?.message || 'Failed to get a response from OpenAI',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

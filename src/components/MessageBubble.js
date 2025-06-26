@@ -19,14 +19,17 @@ const MessageBubble = ({ message }) => {
     }
   };
 
+  const bubbleClass = message.role === 'user' 
+    ? 'bg-blue-600 text-white self-end' 
+    : message.isError 
+      ? 'bg-red-100 text-red-800 self-start border border-red-300' 
+      : 'bg-gray-100 text-gray-800 self-start';
+
   return (
     <div className={`flex w-full my-4 ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div
         className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm
-        ${isUser
-          ? 'bg-gray-100 text-gray-800'
-          : 'bg-white text-gray-900'
-        }
+        ${bubbleClass}
         dark:${isUser
           ? 'bg-gray-700 text-gray-200'
           : 'bg-[#1E1E1E] text-gray-100'

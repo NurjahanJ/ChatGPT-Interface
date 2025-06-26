@@ -14,22 +14,65 @@ const API_URL = '/api/chat';
  * @param {string} modelId - The ID of the selected model
  * @returns {Promise<Object>} - A promise that resolves to the API response
  */
-export const sendConversation = async (messages, modelId = 'gpt-4o') => {
+// Helper function to add delay
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Function to send conversation with retry logic
+export const sendConversation = async (messages, modelId = 'gpt-4o', retries = 2) => {
   try {
     console.log('Sending request to API with model:', modelId);
-    const response = await axios.post(API_URL, { messages, modelId });
+    
+    // Add request timeout
+    const response = await axios.post(API_URL, { messages, modelId }, {
+      timeout: 30000, // 30 seconds timeout
+    });
+    
     return response.data;
   } catch (error) {
     console.error('Error details:', {
       message: error.message,
       response: error.response?.data,
       status: error.response?.status,
-      modelId: modelId
+      modelId: modelId,
+      retryCount: retries
     });
-    throw new Error(
-      error.response?.data?.error || 
-      'Failed to get a response. Please try again later.'
-    );
+    
+    // Retry logic for specific errors
+    if (retries > 0) {
+      // Retry on network errors, timeouts, or 5xx server errors
+      if (!error.response || error.code === 'ECONNABORTED' || 
+          (error.response && error.response.status >= 500)) {
+        console.log(`Retrying request (${retries} attempts left)...`);
+        await delay(1000); // Wait 1 second before retrying
+        return sendConversation(messages, modelId, retries - 1);
+      }
+    }
+    
+    // Construct a more informative error message
+    let errorMessage = 'Failed to get a response. Please try again later.';
+    
+    if (error.code === 'ECONNABORTED') {
+      errorMessage = 'Request timed out. The server took too long to respond.';
+    } else if (error.response) {
+      switch (error.response.status) {
+        case 401:
+          errorMessage = 'Authentication error. Please check API key configuration.';
+          break;
+        case 403:
+          errorMessage = 'Access forbidden. Please check permissions.';
+          break;
+        case 429:
+          errorMessage = 'Rate limit exceeded. Please try again later.';
+          break;
+        case 500:
+          errorMessage = 'Server error. The API encountered an unexpected condition.';
+          break;
+        default:
+          errorMessage = error.response.data?.error || errorMessage;
+      }
+    }
+    
+    throw new Error(errorMessage);
   }
 };
 
