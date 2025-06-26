@@ -19,6 +19,7 @@ const MessageBubble = ({ message }) => {
     }
   };
 
+  // Only use special styling for errors, otherwise keep original styling
   const bubbleClass = message.role === 'user' 
     ? 'bg-blue-600 text-white self-end' 
     : message.isError 

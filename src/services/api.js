@@ -6,7 +6,28 @@ import axios from 'axios';
  */
 
 // API endpoint for the serverless function
+// Get the base URL from the current window location
+const getBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    return `${window.location.protocol}//${window.location.host}`;
+  }
+  return '';
+};
+
+// API endpoint for the serverless function
 const API_URL = '/api/chat';
+
+// Log the API URL for debugging
+console.log(`Using API URL: ${API_URL} with base: ${getBaseUrl()}`);
+
+// Create axios instance with proper base URL
+const apiClient = axios.create({
+  baseURL: getBaseUrl(),
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
 
 /**
  * Send a conversation to the OpenAI API
@@ -21,11 +42,10 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 export const sendConversation = async (messages, modelId = 'gpt-4o', retries = 2) => {
   try {
     console.log('Sending request to API with model:', modelId);
+    console.log('Full API URL:', `${getBaseUrl()}${API_URL}`);
     
-    // Add request timeout
-    const response = await axios.post(API_URL, { messages, modelId }, {
-      timeout: 30000, // 30 seconds timeout
-    });
+    // Use the apiClient instance instead of axios directly
+    const response = await apiClient.post(API_URL, { messages, modelId });
     
     return response.data;
   } catch (error) {
