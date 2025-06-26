@@ -10,20 +10,20 @@ export const models = [
     default: true
   },
   {
-    id: 'o3',
-    name: 'o3',
+    id: 'gpt-3.5-turbo',
+    name: 'GPT-3.5 Turbo',
     description: 'Uses advanced reasoning',
     default: false
   },
   {
-    id: 'o4-mini',
-    name: 'o4-mini',
+    id: 'gpt-4o-mini',
+    name: 'GPT-4o Mini',
     description: 'Fastest at advanced reasoning',
     default: false
   },
   {
-    id: 'o4-mini-high',
-    name: 'o4-mini-high',
+    id: 'gpt-4-vision-preview',
+    name: 'GPT-4 Vision',
     description: 'Great at coding and visual reasoning',
     default: false
   }

@@ -16,10 +16,16 @@ const API_URL = '/api/chat';
  */
 export const sendConversation = async (messages, modelId = 'gpt-4o') => {
   try {
+    console.log('Sending request to API with model:', modelId);
     const response = await axios.post(API_URL, { messages, modelId });
     return response.data;
   } catch (error) {
-    console.error('Error sending conversation to API:', error);
+    console.error('Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      modelId: modelId
+    });
     throw new Error(
       error.response?.data?.error || 
       'Failed to get a response. Please try again later.'

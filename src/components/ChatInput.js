@@ -87,7 +87,8 @@ const ChatInput = ({ onSendMessage, disabled }) => {
   };
 
   const startListening = () => {
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+    if (typeof window !== 'undefined' && 
+        ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
       
@@ -125,7 +126,7 @@ const ChatInput = ({ onSendMessage, disabled }) => {
   };
   
   const stopListening = () => {
-    if (window.recognition) {
+    if (typeof window !== 'undefined' && window.recognition) {
       window.recognition.stop();
       setIsListening(false);
     }

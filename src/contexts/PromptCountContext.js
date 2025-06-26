@@ -8,9 +8,13 @@ export const usePromptCount = () => useContext(PromptCountContext);
 
 export const PromptCountProvider = ({ children }) => {
   // Get initial count from localStorage or set to 0
+  // Added safeguard for server-side rendering where localStorage isn't available
   const getInitialCount = () => {
-    const savedCount = localStorage.getItem('promptCount');
-    return savedCount ? parseInt(savedCount, 10) : 0;
+    if (typeof window !== 'undefined') {
+      const savedCount = localStorage.getItem('promptCount');
+      return savedCount ? parseInt(savedCount, 10) : 0;
+    }
+    return 0;
   };
 
   const [count, setCount] = useState(getInitialCount);
@@ -19,8 +23,12 @@ export const PromptCountProvider = ({ children }) => {
   const MAX_PROMPTS_PER_DAY = 25;
   
   // Get the last reset date from localStorage
+  // Added safeguard for server-side rendering
   const getLastResetDate = () => {
-    return localStorage.getItem('lastResetDate');
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('lastResetDate');
+    }
+    return null;
   };
   
   // Check if we need to reset the count (new day)
@@ -31,14 +39,18 @@ export const PromptCountProvider = ({ children }) => {
     if (lastResetDate !== today) {
       // Reset count for a new day
       setCount(0);
-      localStorage.setItem('promptCount', '0');
-      localStorage.setItem('lastResetDate', today);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('promptCount', '0');
+        localStorage.setItem('lastResetDate', today);
+      }
     }
   }, []);
   
   // Update localStorage when count changes
   useEffect(() => {
-    localStorage.setItem('promptCount', count.toString());
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('promptCount', count.toString());
+    }
   }, [count]);
   
   // Increment the prompt count
